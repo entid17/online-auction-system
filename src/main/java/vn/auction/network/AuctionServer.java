@@ -1,4 +1,4 @@
-package vn.auction.server;
+package vn.auction.network;
 
 import java.io.IOException;
 import java.net.ServerSocket;

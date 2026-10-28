@@ -1,4 +1,4 @@
-package com.auction.server;
+package vn.auction.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 public class AuctionServer implements AutoCloseable {
-    private static final int DEFAULT_PORT = 5000;
+    private static final int DEFAULT_PORT = 5000; //Khai báo 1 cổng 5000
 
     private final ServerSocket serverSocket;
 

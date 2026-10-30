@@ -47,3 +47,9 @@ public final class Domain {
         }
 
         public abstract Role role();
+
+        @Override
+        public String describe() {
+            return role() + ": " + name;
+        }
+    }

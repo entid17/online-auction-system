@@ -1,4 +1,4 @@
-package com.auction.storage;
+package vn.auction.storage;
 
 public class DataStorage {
 }

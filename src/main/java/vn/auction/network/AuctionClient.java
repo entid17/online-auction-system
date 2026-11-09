@@ -52,4 +52,47 @@ public final class AuctionClient implements AutoCloseable {
     return result;
   }
 
+   private void read() {
+    try (Reader reader =
+        new BufferedReader(
+            new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
+      String line;
+      while ((line = JsonLines.read(reader, 8_000_000)) != null) {
+        JsonObject message = JsonParser.parseString(line).getAsJsonObject();
+        if (message.has("event")) {
+          onChange.run();
+          continue;
+        }
+        if (!message.has("id") || message.get("id").isJsonNull()) {
+          continue;
+        }
+        CompletableFuture<JsonElement> result = pending.remove(message.get("id").getAsLong());
+        if (result == null) {
+          continue;
+        }
+        if (message.get("ok").getAsBoolean()) {
+          result.complete(message.get("data"));
+        } else {
+          result.completeExceptionally(new IOException(message.get("error").getAsString()));
+        }
+      }
+    } catch (Exception e) {
+      /* Closing also completes waiting requests below. */
+    } finally {
+      close();
+      onDisconnect.accept("Disconnected. Connect and log in again.");
+    }
+  }
+
+  @Override
+  public void close() {
+    try {
+      socket.close();
+    } catch (IOException ignored) {
+    }
+    pending.values().forEach(f -> f.completeExceptionally(new IOException("Connection closed")));
+    pending.clear();
+  }
+}
+
  

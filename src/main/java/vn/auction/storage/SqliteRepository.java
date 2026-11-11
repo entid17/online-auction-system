@@ -34,3 +34,41 @@ public final class SqliteRepository implements Repository {
       throw new IllegalStateException("Cannot load database", e);
     }
   }
+
+  @Override
+  public synchronized void save(Snapshot snapshot) {
+    try {
+      connection.setAutoCommit(false);
+      try (PreparedStatement s =
+          connection.prepareStatement(
+              "INSERT INTO app_state(id,payload) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET"
+                  + " payload=excluded.payload")) {
+        s.setString(1, gson.toJson(snapshot));
+        s.executeUpdate();
+      }
+      connection.commit();
+    } catch (SQLException e) {
+      try {
+        connection.rollback();
+      } catch (SQLException rollback) {
+        e.addSuppressed(rollback);
+      }
+      throw new IllegalStateException("Cannot save database", e);
+    } finally {
+      try {
+        connection.setAutoCommit(true);
+      } catch (SQLException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+  }
+
+  @Override
+  public synchronized void close() {
+    try {
+      connection.close();
+    } catch (SQLException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+}

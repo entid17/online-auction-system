@@ -35,3 +35,35 @@ public final class MainController implements AutoCloseable {
   private boolean refreshing;
   private boolean refreshAgain;
   private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");   
+
+  @FXML
+  public void initialize() {
+    role.getItems().setAll("BIDDER", "SELLER");
+    role.setValue("BIDDER");
+    type.getItems().setAll("ELECTRONICS", "ART", "VEHICLE");
+    type.setValue("ELECTRONICS");
+    addColumn("Product", a -> a.item().describe(), 240);
+    addColumn("Price (VND)", a -> String.valueOf(a.currentPrice()), 140);
+    addColumn("State", a -> a.status().name(), 100);
+    addColumn("Ends (local time)", a -> time(a.endAt()), 180);
+    auctions
+        .getSelectionModel()
+        .selectedItemProperty()
+        .addListener((o, before, after) -> show(after));
+    start.setText(LocalDateTime.now().plusMinutes(2).format(TIME));
+    end.setText(LocalDateTime.now().plusMinutes(15).format(TIME));
+    chart.setAnimated(false);
+  }
+
+  private void addColumn(
+      String label, java.util.function.Function<Auction, String> value, int width) {
+    TableColumn<Auction, String> column = new TableColumn<>(label);
+    column.setCellValueFactory(v -> new SimpleStringProperty(value.apply(v.getValue())));
+    column.setPrefWidth(width);
+    auctions.getColumns().add(column);
+  }
+
+  private static String time(long value) {
+    return LocalDateTime.ofInstant(Instant.ofEpochMilli(value), ZoneId.systemDefault())
+        .format(TIME);
+  }
